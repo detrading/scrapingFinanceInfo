@@ -1,0 +1,74 @@
+<?PHP
+ini_set('user_agent', 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0');
+/*
+$count =1;
+do{
+
+    $link[] = 'https://markets.businessinsider.com/index/components/s&p_500?p='.$count;
+    ++$count;
+}while( $count <= 1 );
+*/
+//print_r($link);  echo PHP_EOL;// die();
+
+$link[] = 'https://markets.businessinsider.com/index/components/s&p_500?p='.$argv[1];
+
+foreach($link as $indlink){
+
+
+
+
+
+    $htmlContent = file_get_contents("$indlink");
+	$DOM = new DOMDocument();
+	$DOM->loadHTML($htmlContent);
+	$Header = $DOM->getElementsByTagName('th');
+	$Detail = $DOM->getElementsByTagName('td');
+
+    foreach($Detail as $NodeHeader)  {		$aDataTableHeaderHTML[] = trim($NodeHeader->textContent);		}
+	//print_r($aDataTableHeaderHTML);  echo PHP_EOL;// die();
+	$maxkey = max(array_keys($aDataTableHeaderHTML));$key = 6;
+
+
+do{
+$name = (string) SQLite3::escapeString($aDataTableHeaderHTML[$key]);
+$price =  $aDataTableHeaderHTML[++$key];
+$price = str_replace(array("\r", "\n"), '<', $price);
+$price = strtok($price,'<');
+
+
+
+	$filename = $name.'.csv';
+	$pathtofile =  __DIR__  .'/data_sp500/'.$filename;
+	var_dump($pathtofile);
+	if (!file_exists($pathtofile)) {
+	    echo 'file does not exist';
+	   touch($pathtofile);
+		
+	}
+	
+		  $datetime = new DateTime();
+		 $dt = (string)$datetime->format('Y-m-d H:i:s');
+		  $fp = fopen($pathtofile, 'a');
+		 // echo $name, $price, PHP_EOL;
+	$fields = array($name, $price,  $dt); 
+	fputcsv($fp, $fields);
+	fclose($fp);
+	
+
+	
+
+
+
+$key = $key + 10;
+
+}while ($key < $maxkey);
+
+unset($key);
+
+
+
+
+
+
+
+}
